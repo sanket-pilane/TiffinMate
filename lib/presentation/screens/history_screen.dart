@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:intl/intl.dart';
+import 'package:tiffin_mate/core/services/pdf_generate.dart';
 import 'package:tiffin_mate/data/models/tiffin_entry.dart';
 import 'package:tiffin_mate/logic/blocs/tiffin_bloc.dart';
 import 'package:tiffin_mate/logic/blocs/tiffin_state.dart';
@@ -20,6 +21,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
   RangeSelectionMode _rangeSelectionMode = RangeSelectionMode.toggledOff;
   DateTime? _rangeStart;
   DateTime? _rangeEnd;
+
+  final PdfService _pdfService = PdfService(); // Initialize Service
 
   @override
   void initState() {
@@ -55,7 +58,6 @@ class _HistoryScreenState extends State<HistoryScreen> {
         builder: (context, state) {
           final tiffins = state.tiffins;
 
-          // Determine which tiffins to show based on selection
           List<TiffinEntry> selectedTiffins = [];
           if (_rangeStart != null && _rangeEnd != null) {
             selectedTiffins = _getTiffinsForRange(
@@ -65,9 +67,11 @@ class _HistoryScreenState extends State<HistoryScreen> {
             );
           } else if (_selectedDay != null) {
             selectedTiffins = _getTiffinsForDay(_selectedDay!, tiffins);
+          } else {
+            // Default to showing all if nothing specific selected (or handle as empty)
+            selectedTiffins = tiffins;
           }
 
-          // Calculate Bill
           double totalBill = selectedTiffins.fold(
             0,
             (sum, item) => sum + item.price,
@@ -77,7 +81,11 @@ class _HistoryScreenState extends State<HistoryScreen> {
             children: [
               _buildCalendar(tiffins),
               const SizedBox(height: 8),
-              _buildBillHeader(totalBill, selectedTiffins.length),
+              _buildBillHeader(
+                totalBill,
+                selectedTiffins,
+                state.userProfile?.name ?? 'User',
+              ),
               Expanded(
                 child: ListView.separated(
                   padding: const EdgeInsets.all(16),
@@ -170,7 +178,11 @@ class _HistoryScreenState extends State<HistoryScreen> {
     );
   }
 
-  Widget _buildBillHeader(double total, int count) {
+  Widget _buildBillHeader(
+    double total,
+    List<TiffinEntry> selectedTiffins,
+    String userName,
+  ) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
       padding: const EdgeInsets.all(16),
@@ -201,19 +213,44 @@ class _HistoryScreenState extends State<HistoryScreen> {
               ),
             ],
           ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.5),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Text(
-              "$count Meals",
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: Theme.of(context).colorScheme.onPrimaryContainer,
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.5),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  "${selectedTiffins.length} Meals",
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).colorScheme.onPrimaryContainer,
+                  ),
+                ),
               ),
-            ),
+              const SizedBox(width: 8),
+              if (selectedTiffins.isNotEmpty)
+                IconButton(
+                  onPressed: () async {
+                    // Trigger PDF Share
+                    await _pdfService.generateAndShareInvoice(
+                      selectedTiffins,
+                      userName,
+                      _rangeStart ?? _selectedDay,
+                      _rangeEnd ?? _selectedDay,
+                    );
+                  },
+                  icon: const Icon(Icons.share),
+                  style: IconButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    foregroundColor: Theme.of(context).colorScheme.primary,
+                  ),
+                ),
+            ],
           ),
         ],
       ),
