@@ -3,8 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:tiffin_mate/core/theme/app_theme.dart';
 import 'package:tiffin_mate/data/repositories/tiffin_repository.dart';
 import 'package:tiffin_mate/data/repositories/tiffin_repository_impl.dart';
-import 'package:tiffin_mate/logic/blocs/bloc/tiffin_bloc.dart';
-import 'package:tiffin_mate/logic/blocs/bloc/tiffin_event.dart';
+import 'package:tiffin_mate/logic/blocs/tiffin_bloc.dart';
+import 'package:tiffin_mate/logic/blocs/tiffin_event.dart';
 import 'package:tiffin_mate/presentation/screens/dashboard_screen.dart';
 
 void main() async {

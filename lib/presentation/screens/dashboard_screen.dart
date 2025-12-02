@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lottie/lottie.dart';
 import 'package:intl/intl.dart';
-import 'package:tiffin_mate/logic/blocs/bloc/tiffin_bloc.dart';
-import 'package:tiffin_mate/logic/blocs/bloc/tiffin_state.dart';
+import 'package:tiffin_mate/logic/blocs/tiffin_bloc.dart';
+import 'package:tiffin_mate/logic/blocs/tiffin_event.dart';
+import 'package:tiffin_mate/logic/blocs/tiffin_state.dart';
+import 'package:tiffin_mate/presentation/screens/setting_screen.dart';
 
 import 'package:tiffin_mate/presentation/widgets/add_tiffin_sheet.dart';
 import 'package:tiffin_mate/presentation/widgets/summary_card.dart';
@@ -16,12 +18,26 @@ class DashboardScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: AppBar(
-        title: const Text("TiffinMate"),
+        title: BlocBuilder<TiffinBloc, TiffinState>(
+          builder: (context, state) {
+            final name = state.userProfile?.name ?? "User";
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text("TiffinMate", style: TextStyle(fontSize: 20)),
+                Text("Hello, $name 👋", style: const TextStyle(fontSize: 12)),
+              ],
+            );
+          },
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.settings_outlined),
             onPressed: () {
-              // TODO: Navigate to Settings
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const SettingsScreen()),
+              );
             },
           ),
         ],
@@ -32,7 +48,6 @@ class DashboardScreen extends StatelessWidget {
             return const Center(child: CircularProgressIndicator());
           }
 
-          // Calculate totals
           double weekTotal = 0;
           for (var tiffin in state.tiffins) {
             weekTotal += tiffin.price;
@@ -59,7 +74,7 @@ class DashboardScreen extends StatelessWidget {
                 Expanded(
                   child: state.tiffins.isEmpty
                       ? _buildEmptyState()
-                      : _buildTiffinList(state.tiffins),
+                      : _buildTiffinList(context, state.tiffins),
                 ),
               ],
             ),
@@ -88,7 +103,6 @@ class DashboardScreen extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          // Ensure you have an empty_state.json in assets/animations/
           Lottie.asset(
             'assets/animations/empty_state.json',
             height: 200,
@@ -105,38 +119,65 @@ class DashboardScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildTiffinList(List<dynamic> tiffins) {
+  Widget _buildTiffinList(BuildContext context, List<dynamic> tiffins) {
     return ListView.builder(
       itemCount: tiffins.length,
       itemBuilder: (context, index) {
         final tiffin = tiffins[index];
-        return Card(
-          margin: const EdgeInsets.only(bottom: 12),
-          elevation: 0,
-          color: Colors.white,
-          shape: RoundedRectangleBorder(
-            side: BorderSide(color: Colors.grey.shade200),
-            borderRadius: BorderRadius.circular(12),
+        return Dismissible(
+          key: Key(tiffin.id),
+          direction: DismissDirection.endToStart,
+          background: Container(
+            alignment: Alignment.centerRight,
+            padding: const EdgeInsets.only(right: 20),
+            margin: const EdgeInsets.only(bottom: 12),
+            decoration: BoxDecoration(
+              color: Colors.red.shade400,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const Icon(Icons.delete, color: Colors.white),
           ),
-          child: ListTile(
-            leading: CircleAvatar(
-              backgroundColor: tiffin.type == 'Lunch'
-                  ? Colors.orange.shade100
-                  : Colors.indigo.shade100,
-              child: Icon(
-                tiffin.type == 'Lunch' ? Icons.sunny : Icons.nightlight_round,
-                color: tiffin.type == 'Lunch' ? Colors.orange : Colors.indigo,
-                size: 20,
+          onDismissed: (direction) {
+            context.read<TiffinBloc>().add(DeleteTiffinEntryEvent(tiffin.id));
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(const SnackBar(content: Text("Entry deleted")));
+          },
+          child: Card(
+            margin: const EdgeInsets.only(bottom: 12),
+            elevation: 0,
+            color: Colors.white,
+            shape: RoundedRectangleBorder(
+              side: BorderSide(color: Colors.grey.shade200),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: ListTile(
+              leading: CircleAvatar(
+                backgroundColor: tiffin.type == 'Lunch'
+                    ? Colors.orange.shade100
+                    : Colors.indigo.shade100,
+                child: Icon(
+                  tiffin.type == 'Lunch' ? Icons.sunny : Icons.nightlight_round,
+                  color: tiffin.type == 'Lunch' ? Colors.orange : Colors.indigo,
+                  size: 20,
+                ),
               ),
-            ),
-            title: Text(
-              tiffin.type,
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-            subtitle: Text(DateFormat('MMM d, h:mm a').format(tiffin.date)),
-            trailing: Text(
-              "₹${tiffin.price.toStringAsFixed(0)}",
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              title: Text(
+                tiffin.type,
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              subtitle: Text(
+                "${DateFormat('MMM d, h:mm a').format(tiffin.date)} ${tiffin.menu.isNotEmpty ? '• ${tiffin.menu}' : ''}",
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              trailing: Text(
+                "₹${tiffin.price.toStringAsFixed(0)}",
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ),
           ),
         );

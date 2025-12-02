@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:tiffin_mate/data/models/tiffin_entry.dart';
-import 'package:tiffin_mate/logic/blocs/bloc/tiffin_bloc.dart';
-import 'package:tiffin_mate/logic/blocs/bloc/tiffin_event.dart';
+import 'package:tiffin_mate/logic/blocs/tiffin_bloc.dart';
+import 'package:tiffin_mate/logic/blocs/tiffin_event.dart';
 
 class AddTiffinSheet extends StatefulWidget {
   const AddTiffinSheet({super.key});
