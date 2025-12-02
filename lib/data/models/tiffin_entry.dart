@@ -49,4 +49,27 @@ class TiffinEntry extends HiveObject {
       isSynced: isSynced ?? this.isSynced,
     );
   }
+
+  // --- NEW: Firestore Helpers ---
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'date': date.toIso8601String(),
+      'type': type,
+      'price': price,
+      'menu': menu,
+    };
+  }
+
+  factory TiffinEntry.fromMap(Map<String, dynamic> map) {
+    return TiffinEntry(
+      id: map['id'],
+      date: DateTime.parse(map['date']),
+      type: map['type'],
+      price: (map['price'] as num).toDouble(),
+      menu: map['menu'] ?? '',
+      isSynced: true, // If coming from cloud, it is synced
+    );
+  }
 }

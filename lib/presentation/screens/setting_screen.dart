@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:tiffin_mate/data/models/user_profile.dart';
+import 'package:tiffin_mate/data/repositories/tiffin_repository.dart';
 import 'package:tiffin_mate/logic/blocs/tiffin_bloc.dart';
 import 'package:tiffin_mate/logic/blocs/tiffin_event.dart';
 import 'package:tiffin_mate/logic/blocs/tiffin_state.dart';
@@ -44,6 +45,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
   }
 
+  void _logout() async {
+    // Access repo via context if provided, or pass it.
+    // Since we use RepositoryProvider in Main (coming next), we can read it.
+    await context.read<TiffinRepository>().signOut();
+    if (mounted) {
+      Navigator.pop(context); // Close settings to return to root wrapper
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -65,9 +75,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
               children: [
                 const Text(
                   "User Profile",
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  style: TextStyle(fontWeight: FontWeight.bold),
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 10),
                 TextFormField(
                   controller: _nameController,
                   decoration: const InputDecoration(
@@ -79,7 +89,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 const SizedBox(height: 20),
                 const Text(
                   "Billing Defaults",
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  style: TextStyle(fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 10),
                 TextFormField(
@@ -89,24 +99,28 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     labelText: "Default Tiffin Price",
                     border: OutlineInputBorder(),
                     prefixIcon: Icon(Icons.currency_rupee),
-                    helperText: "This price will be used for quick adds",
                   ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter a price';
-                    }
-                    if (double.tryParse(value) == null) {
-                      return 'Please enter a valid number';
-                    }
-                    return null;
-                  },
+                  validator: (val) => val!.isEmpty ? 'Enter a price' : null,
                 ),
-                const Spacer(),
+                const SizedBox(height: 20),
                 FilledButton.icon(
                   onPressed: _saveSettings,
                   icon: const Icon(Icons.save),
                   label: const Text("Save Settings"),
                   style: FilledButton.styleFrom(
+                    padding: const EdgeInsets.all(16),
+                  ),
+                ),
+                const Spacer(),
+                OutlinedButton.icon(
+                  onPressed: _logout,
+                  icon: const Icon(Icons.logout, color: Colors.red),
+                  label: const Text(
+                    "Logout",
+                    style: TextStyle(color: Colors.red),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    side: const BorderSide(color: Colors.red),
                     padding: const EdgeInsets.all(16),
                   ),
                 ),

@@ -34,9 +34,15 @@ class DashboardScreen extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.settings_outlined),
             onPressed: () {
+              // Same fix applies to navigation if SettingsScreen needs the Bloc
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const SettingsScreen()),
+                MaterialPageRoute(
+                  builder: (_) => BlocProvider.value(
+                    value: context.read<TiffinBloc>(),
+                    child: const SettingsScreen(),
+                  ),
+                ),
               );
             },
           ),
@@ -83,13 +89,20 @@ class DashboardScreen extends StatelessWidget {
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
+          // 1. Capture the Bloc instance from the current context
+          final tiffinBloc = context.read<TiffinBloc>();
+
           showModalBottomSheet(
             context: context,
             isScrollControlled: true,
             shape: const RoundedRectangleBorder(
               borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
             ),
-            builder: (context) => const AddTiffinSheet(),
+            // 2. Wrap the sheet in BlocProvider.value to pass the captured instance
+            builder: (context) => BlocProvider.value(
+              value: tiffinBloc,
+              child: const AddTiffinSheet(),
+            ),
           );
         },
         label: const Text("Add Tiffin"),
