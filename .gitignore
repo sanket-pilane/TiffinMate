@@ -35,7 +35,7 @@ migrate_working_dir/
 lib/firebase_options.dart
 # Symbolication related
 app.*.symbols
-
+google-services.json
 # Obfuscation related
 app.*.map.json
 
