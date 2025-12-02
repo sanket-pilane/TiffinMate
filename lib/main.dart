@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:tiffin_mate/core/theme/app_theme.dart';
-import 'package:tiffin_mate/data/repositories/tiffin_repository.dart';
 import 'package:tiffin_mate/data/repositories/tiffin_repository_impl.dart';
 import 'package:tiffin_mate/logic/blocs/tiffin_bloc.dart';
 import 'package:tiffin_mate/logic/blocs/tiffin_event.dart';
-import 'package:tiffin_mate/presentation/screens/dashboard_screen.dart';
+import 'package:tiffin_mate/presentation/screens/home_screen.dart'; // Changed import
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -17,7 +17,8 @@ void main() async {
 }
 
 class TiffinApp extends StatelessWidget {
-  final TiffinRepository repository;
+  final TiffinRepositoryImpl
+  repository; // Use specific type if needed or interface
 
   const TiffinApp({super.key, required this.repository});
 
@@ -36,7 +37,7 @@ class TiffinApp extends StatelessWidget {
         theme: AppTheme.lightTheme,
         darkTheme: AppTheme.darkTheme,
         themeMode: ThemeMode.system,
-        home: const DashboardScreen(),
+        home: const HomeScreen(), // Changed to HomeScreen
       ),
     );
   }
