@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:tiffin_mate/core/services/notification_service.dart';
 import 'package:tiffin_mate/data/models/user_profile.dart';
 import 'package:tiffin_mate/data/repositories/tiffin_repository.dart';
 import 'package:tiffin_mate/logic/blocs/tiffin_bloc.dart';
@@ -17,6 +18,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   final _nameController = TextEditingController();
   final _priceController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
+  bool _notificationsEnabled = false;
 
   @override
   void initState() {
@@ -25,6 +27,30 @@ class _SettingsScreenState extends State<SettingsScreen> {
     if (state.userProfile != null) {
       _nameController.text = state.userProfile!.name;
       _priceController.text = state.userProfile!.defaultTiffinPrice.toString();
+    }
+    // In a real app, save this preference to Hive/SharedPreferences
+  }
+
+  void _toggleNotifications(bool value) async {
+    setState(() => _notificationsEnabled = value);
+    final service = context.read<NotificationService>();
+
+    if (value) {
+      bool granted = await service.requestPermissions();
+      if (granted) {
+        await service.scheduleDailyReminders();
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Reminders scheduled for 2 PM & 9 PM'),
+            ),
+          );
+        }
+      } else {
+        setState(() => _notificationsEnabled = false); // Revert if denied
+      }
+    } else {
+      await service.disableNotifications();
     }
   }
 
@@ -46,11 +72,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   void _logout() async {
-    // Access repo via context if provided, or pass it.
-    // Since we use RepositoryProvider in Main (coming next), we can read it.
     await context.read<TiffinRepository>().signOut();
     if (mounted) {
-      Navigator.pop(context); // Close settings to return to root wrapper
+      Navigator.pop(context);
     }
   }
 
@@ -103,6 +127,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   validator: (val) => val!.isEmpty ? 'Enter a price' : null,
                 ),
                 const SizedBox(height: 20),
+                SwitchListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: const Text("Daily Reminders"),
+                  subtitle: const Text("Get notified at 2 PM & 9 PM"),
+                  value: _notificationsEnabled,
+                  onChanged: _toggleNotifications,
+                ),
+                const SizedBox(height: 20),
                 FilledButton.icon(
                   onPressed: _saveSettings,
                   icon: const Icon(Icons.save),
@@ -111,6 +143,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     padding: const EdgeInsets.all(16),
                   ),
                 ),
+                ElevatedButton(
+                  onPressed: () async {
+                    // Correct Way: Use the service provided by main.dart
+                    await context
+                        .read<NotificationService>()
+                        .showInstantNotification();
+
+                    // Debug helper: Show a snackbar so you know you clicked it
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Scheduled! Wait 5 seconds...'),
+                      ),
+                    );
+                  },
+                  child: const Text("Test Notification"),
+                ),
+
                 const Spacer(),
                 OutlinedButton.icon(
                   onPressed: _logout,

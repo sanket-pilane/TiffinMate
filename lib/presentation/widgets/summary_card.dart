@@ -42,13 +42,13 @@ class SummaryCard extends StatelessWidget {
             children: [
               Text(
                 "This Week",
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: Colors.white.withOpacity(0.9),
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(color: Colors.grey.shade800),
               ),
               Icon(
                 Icons.calendar_today_rounded,
-                color: Colors.white.withOpacity(0.7),
+                color: Colors.grey.shade800,
                 size: 18,
               ),
             ],
@@ -72,7 +72,7 @@ class SummaryCard extends StatelessWidget {
             ),
             child: Text(
               "$tiffinCount Tiffins consumed",
-              style: const TextStyle(color: Colors.white, fontSize: 13),
+              style: TextStyle(color: Colors.grey.shade800, fontSize: 13),
             ),
           ),
         ],
