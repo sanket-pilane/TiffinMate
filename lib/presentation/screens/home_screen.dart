@@ -16,8 +16,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    // 1. Request permissions when Home Screen loads
-    // Using addPostFrameCallback ensures context is available
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<NotificationService>().requestPermissions();
     });
