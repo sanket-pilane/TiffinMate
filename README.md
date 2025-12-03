@@ -1,5 +1,7 @@
 # 🍱 TiffinMate
 
+[![Watch Demo](https://img.shields.io/badge/Watch_Demo-FF5733?style=for-the-badge&logo=youtube)](/doc/demo.mp4)
+
 > **A lightweight, offline-first Flutter application to track daily tiffin meals, calculate bills, and manage mess expenses.**
 
 **TiffinMate** is designed for students and professionals living in hostels or PGs who rely on tiffin services. It solves the common problem of tracking daily meals ("Did I eat lunch on Tuesday?") and calculating monthly bills accurately, all wrapped in a modern, animated user interface.
@@ -52,19 +54,6 @@
 
 ---
 
-## 🏗️ Offline-First Architecture
-
-To ensure reliability even with spotty internet, TiffinMate uses a robust **Repository Pattern**:
-
-1.  **User Action**: You tap "Add Tiffin".
-2.  **Local Write**: Data is **immediately** saved to **Hive** (Local DB). The UI updates instantly.
-3.  **Background Sync**:
-    - **Online**: Data is pushed to **Firebase Firestore** immediately.
-    - **Offline**: Data is flagged as "unsynced".
-    - **Reconnection**: A background worker automatically pushes pending changes when internet is restored.
-
----
-
 ## 🎨 UI/UX Design System
 
 - **Theme**: Modern Minimalist with full **Dark Mode** support.
@@ -76,6 +65,53 @@ To ensure reliability even with spotty internet, TiffinMate uses a robust **Repo
   - **Hero Animations**: Smooth transitions when expanding details.
   - **Confetti**: Celebrate when a bill is marked as "Paid" 🎉.
   - **Slide-to-Delete**: Intuitive gestures for management.
+
+---
+
+## 🧱 System Architecture
+
+![TiffinMate Architecture](/doc/architecture.png)
+
+---
+
+## 🗺 Mermaid Architecture Diagram
+
+```mermaid
+flowchart TD
+
+%% ─────────────── LAYER 1: PRESENTATION ───────────────
+subgraph UI["Presentation Layer • Flutter UI 🟦 (Flutter)"]
+    Screen[User Interface Screens]
+end
+
+%% ─────────────── LAYER 2: BUSINESS LOGIC ───────────────
+subgraph BLOC["Business Logic Layer • BLoC ⚙ State Management"]
+    BlocEngine[BLoC Layer]
+end
+
+%% ─────────────── LAYER 3: DATA ───────────────
+subgraph DATA["Data Layer • Repository"]
+
+    subgraph HIVE["Local Database • Hive 🟨"]
+        HiveDB[(Hive Box Storage)]
+    end
+
+    subgraph FIRESTORE["Remote Database • Firebase 🟧"]
+        FirestoreDB[(Cloud Firestore Collections)]
+    end
+end
+
+%% UI ↔ BLoC
+Screen -->|User Events & Inputs| BlocEngine
+BlocEngine -->|UI State Updates| Screen
+
+%% BLoC ↔ Data Repositories
+BlocEngine -->|Read / Write Requests| HiveDB
+BlocEngine -->|Conditional Sync Requests| FirestoreDB
+
+%% Sync Between Hive & Firestore
+HiveDB <--> |"Offline-First Synchronization"| FirestoreDB
+```
 
 ---
 
