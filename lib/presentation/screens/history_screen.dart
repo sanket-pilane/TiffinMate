@@ -142,7 +142,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
           shape: BoxShape.circle,
         ),
         todayDecoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.secondary.withOpacity(0.5),
+          color: Theme.of(context).colorScheme.secondary,
           shape: BoxShape.circle,
         ),
         selectedDecoration: BoxDecoration(
