@@ -19,6 +19,7 @@ class _AuthScreenState extends State<AuthScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _nameController = TextEditingController();
+  final _vendorIdController = TextEditingController();
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
@@ -36,6 +37,9 @@ class _AuthScreenState extends State<AuthScreen> {
           _emailController.text.trim(),
           _passwordController.text.trim(),
           _nameController.text.trim(),
+          vendorId: _vendorIdController.text.trim().isNotEmpty
+              ? _vendorIdController.text.trim()
+              : null,
         );
       }
     } catch (e) {
@@ -92,6 +96,17 @@ class _AuthScreenState extends State<AuthScreen> {
                     ),
                     validator: (value) =>
                         value!.isEmpty ? "Enter your name" : null,
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _vendorIdController,
+                    decoration: const InputDecoration(
+                      labelText: "Vendor Code (Optional)",
+                      prefixIcon: Icon(Icons.store_outlined),
+                      border: OutlineInputBorder(),
+                      helperText:
+                          "Enter the code provided by your Tiffin Service",
+                    ),
                   ),
                   const SizedBox(height: 16),
                 ],

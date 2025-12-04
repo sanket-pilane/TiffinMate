@@ -32,17 +32,30 @@ class TiffinRepositoryImpl implements TiffinRepository {
       Hive.registerAdapter(TiffinEntryAdapter());
     }
 
-    _userBox = await Hive.openBox<UserProfile>(_userBoxName);
-    _tiffinBox = await Hive.openBox<TiffinEntry>(_tiffinBoxName);
+    // If user is already logged in, open their boxes
+    if (_userId != null) {
+      await initUserData();
+    }
+  }
+
+  @override
+  Future<void> initUserData() async {
+    if (_userId == null) return;
+
+    // If boxes are already open and for the correct user (we assume _userId doesn't change without signOut), return.
+    // But to be safe, we can check box names or just reopen (Hive handles this).
+    // However, Hive.openBox is idempotent.
+
+    _userBox = await Hive.openBox<UserProfile>('${_userBoxName}_$_userId');
+    _tiffinBox = await Hive.openBox<TiffinEntry>('${_tiffinBoxName}_$_userId');
 
     if (_userBox.isEmpty) {
       await _userBox.put('profile', UserProfile(defaultTiffinPrice: 0.0));
     }
 
-    // Attempt sync on startup if user is logged in
-    if (_userId != null) {
-      syncLocalToCloud();
-    }
+    // Sync profile immediately on startup/init
+    await syncUserProfileFromCloud();
+    syncLocalToCloud();
   }
 
   // --- Auth Methods ---
@@ -53,8 +66,12 @@ class TiffinRepositoryImpl implements TiffinRepository {
       email: email,
       password: password,
     );
-    // After login, try to sync
-    syncLocalToCloud();
+
+    // Initialize user-specific boxes
+    if (credential.user != null) {
+      await initUserData();
+    }
+
     return credential;
   }
 
@@ -62,16 +79,25 @@ class TiffinRepositoryImpl implements TiffinRepository {
   Future<UserCredential> signUp(
     String email,
     String password,
-    String name,
-  ) async {
+    String name, {
+    String? vendorId,
+  }) async {
     final credential = await _auth.createUserWithEmailAndPassword(
       email: email,
       password: password,
     );
 
-    // Save initial profile to local Hive
-    final profile = UserProfile(name: name, defaultTiffinPrice: 0.0);
-    await saveUserProfile(profile);
+    if (credential.user != null) {
+      await initUserData();
+
+      // Save initial profile to local Hive
+      final profile = UserProfile(
+        name: name,
+        defaultTiffinPrice: 0.0,
+        vendorId: vendorId,
+      );
+      await saveUserProfile(profile);
+    }
 
     return credential;
   }
@@ -79,9 +105,9 @@ class TiffinRepositoryImpl implements TiffinRepository {
   @override
   Future<void> signOut() async {
     await _auth.signOut();
-    // Optional: Clear local data on logout if you want privacy
-    // await _tiffinBox.clear();
-    // await _userBox.clear();
+    // Close boxes to ensure data isolation
+    if (Hive.isBoxOpen(_userBox.name)) await _userBox.close();
+    if (Hive.isBoxOpen(_tiffinBox.name)) await _tiffinBox.close();
   }
 
   // --- Data Methods ---
@@ -99,6 +125,7 @@ class TiffinRepositoryImpl implements TiffinRepository {
       await _firestore.collection('users').doc(_userId).set({
         'name': profile.name,
         'defaultPrice': profile.defaultTiffinPrice,
+        'vendorId': profile.vendorId,
       }, SetOptions(merge: true));
     }
   }
@@ -177,6 +204,30 @@ class TiffinRepositoryImpl implements TiffinRepository {
         print("Sync failed for ${entry.id}: $e");
         break;
       }
+    }
+  }
+
+  @override
+  Future<void> syncUserProfileFromCloud() async {
+    if (_userId == null) return;
+
+    try {
+      final doc = await _firestore.collection('users').doc(_userId).get();
+      if (doc.exists && doc.data() != null) {
+        final data = doc.data()!;
+        final currentProfile = _userBox.get('profile')!;
+
+        final updatedProfile = currentProfile.copyWith(
+          name: data['name'] as String?,
+          defaultTiffinPrice: (data['defaultPrice'] as num?)?.toDouble(),
+          role: data['role'] as String?,
+          vendorId: data['vendorId'] as String?,
+        );
+
+        await _userBox.put('profile', updatedProfile);
+      }
+    } catch (e) {
+      print("Profile sync failed: $e");
     }
   }
 }

@@ -20,6 +20,25 @@ class AddTiffinEntryEvent extends TiffinEvent {
   List<Object> get props => [entry];
 }
 
+class ConfirmTiffinEntryEvent extends TiffinEvent {
+  final TiffinEntry entry;
+
+  const ConfirmTiffinEntryEvent(this.entry);
+
+  @override
+  List<Object> get props => [entry];
+}
+
+class DisputeTiffinEntryEvent extends TiffinEvent {
+  final TiffinEntry entry;
+  final String reason;
+
+  const DisputeTiffinEntryEvent(this.entry, {this.reason = ''});
+
+  @override
+  List<Object> get props => [entry, reason];
+}
+
 class DeleteTiffinEntryEvent extends TiffinEvent {
   final String id;
 

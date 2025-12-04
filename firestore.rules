@@ -1,0 +1,54 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper function to check if user is admin
+    function isAdmin() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    // Helper function to check if user is accessing their own data
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+
+    // Helper function to check if admin owns the user (Vendor Logic)
+    function isVendorOwner(userId) {
+      let adminVendorId = get(/databases/$(database)/documents/users/$(request.auth.uid)).data.vendorId;
+      let userVendorId = get(/databases/$(database)/documents/users/$(userId)).data.vendorId;
+      return isAdmin() && (adminVendorId == userVendorId || adminVendorId == null); 
+      // adminVendorId == null allows super-admin behavior or legacy admins to see all? 
+      // For strictness: return isAdmin() && adminVendorId == userVendorId;
+    }
+
+    // Users collection
+    match /users/{userId} {
+      // Users can read/write their own profile
+      // Admins can read/write profile if they are the vendor
+      allow read, write: if isOwner(userId) || isVendorOwner(userId) || (isAdmin() && userId == request.auth.uid); 
+      // Note: isAdmin() check above handles self-access for admins too via isOwner, but explicit check helps clarity.
+      // Actually isOwner covers admin accessing their own profile.
+
+      // Tiffins subcollection
+      match /tiffins/{tiffinId} {
+        // Users can read/write their own tiffins
+        // Admins can read/write tiffins if they are the vendor
+        allow read, write: if isOwner(userId) || isVendorOwner(userId);
+      }
+    }
+    
+    // Audit Logs collection
+    match /audit_logs/{logId} {
+      // Only admins can read audit logs
+      // Authenticated users can create logs (for their actions like confirm/dispute)
+      allow read: if isAdmin();
+      allow create: if request.auth != null;
+      allow update, delete: if false; // Audit logs should be immutable
+    }
+    
+    // Collection Group query for tiffins (used by Admin Dashboard for disputes)
+    match /{path=**}/tiffins/{tiffinId} {
+      allow read: if isAdmin();
+    }
+  }
+}

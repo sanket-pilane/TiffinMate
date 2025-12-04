@@ -4,14 +4,14 @@ import 'package:tiffin_mate/core/services/notification_service.dart';
 import 'package:tiffin_mate/presentation/screens/dashboard_screen.dart';
 import 'package:tiffin_mate/presentation/screens/history_screen.dart';
 
-class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+class UserHomeScreen extends StatefulWidget {
+  const UserHomeScreen({super.key});
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  State<UserHomeScreen> createState() => _UserHomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _UserHomeScreenState extends State<UserHomeScreen> {
   int _currentIndex = 0;
   @override
   void initState() {

@@ -4,11 +4,17 @@ import 'package:tiffin_mate/data/models/user_profile.dart';
 
 abstract class TiffinRepository {
   Future<void> initialize();
+  Future<void> initUserData();
 
   // Auth Methods
   Stream<User?> get authStateChanges;
   Future<UserCredential> signIn(String email, String password);
-  Future<UserCredential> signUp(String email, String password, String name);
+  Future<UserCredential> signUp(
+    String email,
+    String password,
+    String name, {
+    String? vendorId,
+  });
   Future<void> signOut();
 
   // Data Methods
@@ -18,4 +24,5 @@ abstract class TiffinRepository {
   Future<List<TiffinEntry>> getAllLocalTiffins();
   Future<void> deleteTiffinEntry(String id);
   Future<void> syncLocalToCloud();
+  Future<void> syncUserProfileFromCloud();
 }

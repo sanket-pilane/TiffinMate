@@ -8,6 +8,7 @@ import 'package:tiffin_mate/logic/blocs/tiffin_event.dart';
 import 'package:tiffin_mate/logic/blocs/tiffin_state.dart';
 import 'package:tiffin_mate/presentation/screens/setting_screen.dart';
 import 'package:tiffin_mate/presentation/widgets/add_tiffin_sheet.dart';
+import 'package:tiffin_mate/presentation/widgets/confirmation_card.dart';
 import 'package:tiffin_mate/presentation/widgets/summary_card.dart';
 
 class DashboardScreen extends StatelessWidget {
@@ -64,10 +65,27 @@ class DashboardScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const SizedBox(height: 10),
+                // Pending Approvals
+                if (state.tiffins.any(
+                  (e) => e.status == 'pending_approval',
+                )) ...[
+                  ...state.tiffins
+                      .where((e) => e.status == 'pending_approval')
+                      .map(
+                        (e) => Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: ConfirmationCard(entry: e),
+                        ),
+                      ),
+                  const SizedBox(height: 20),
+                ],
+
                 // Animate Summary Card: Slide in from top + Shimmer
                 SummaryCard(
                       totalCost: weekTotal,
-                      tiffinCount: state.tiffins.length,
+                      tiffinCount: state.tiffins
+                          .where((e) => e.status == 'confirmed')
+                          .length,
                     )
                     .animate()
                     .slideY(

@@ -1,47 +1,50 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'user_profile.dart';
+part of 'audit_log.dart';
 
 // **************************************************************************
 // TypeAdapterGenerator
 // **************************************************************************
 
-class UserProfileAdapter extends TypeAdapter<UserProfile> {
+class AuditLogAdapter extends TypeAdapter<AuditLog> {
   @override
-  final int typeId = 0;
+  final int typeId = 2;
 
   @override
-  UserProfile read(BinaryReader reader) {
+  AuditLog read(BinaryReader reader) {
     final numOfFields = reader.readByte();
     final fields = <int, dynamic>{
       for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
     };
-    return UserProfile(
-      name: fields[0] as String,
-      defaultTiffinPrice: fields[1] as double,
-      hasSetDefaultPrice: fields[2] as bool,
-      role: fields[3] as String,
-      id: fields[4] as String,
-      vendorId: fields[5] as String?,
+    return AuditLog(
+      id: fields[0] as String,
+      adminId: fields[1] as String,
+      actionType: fields[2] as String,
+      entryId: fields[3] as String,
+      targetUserId: fields[4] as String,
+      timestamp: fields[5] as DateTime,
+      meta: (fields[6] as Map).cast<String, dynamic>(),
     );
   }
 
   @override
-  void write(BinaryWriter writer, UserProfile obj) {
+  void write(BinaryWriter writer, AuditLog obj) {
     writer
-      ..writeByte(6)
+      ..writeByte(7)
       ..writeByte(0)
-      ..write(obj.name)
-      ..writeByte(1)
-      ..write(obj.defaultTiffinPrice)
-      ..writeByte(2)
-      ..write(obj.hasSetDefaultPrice)
-      ..writeByte(3)
-      ..write(obj.role)
-      ..writeByte(4)
       ..write(obj.id)
+      ..writeByte(1)
+      ..write(obj.adminId)
+      ..writeByte(2)
+      ..write(obj.actionType)
+      ..writeByte(3)
+      ..write(obj.entryId)
+      ..writeByte(4)
+      ..write(obj.targetUserId)
       ..writeByte(5)
-      ..write(obj.vendorId);
+      ..write(obj.timestamp)
+      ..writeByte(6)
+      ..write(obj.meta);
   }
 
   @override
@@ -50,7 +53,7 @@ class UserProfileAdapter extends TypeAdapter<UserProfile> {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is UserProfileAdapter &&
+      other is AuditLogAdapter &&
           runtimeType == other.runtimeType &&
           typeId == other.typeId;
 }
